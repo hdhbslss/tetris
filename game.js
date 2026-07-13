@@ -544,4 +544,128 @@ class Tetris {
             for (let x = 0; x < this.cols; x++) {
                 if (this.board[y][x]) {
                     // 消除動畫
-                    if (this.isClearing && this.clearingLines.includes(y
+                    if (this.isClearing && this.clearingLines.includes(y)) {
+                        const alpha = 1 - (this.clearAnimationFrame / 15);
+                        const flash = Math.sin(this.clearAnimationFrame * 0.5) * 0.5 + 0.5;
+                        this.drawBlock(
+                            this.boardCtx,
+                            x * this.blockSize,
+                            y * this.blockSize,
+                            { fill: '#ffffff', glow: '#ffffff' },
+                            this.blockSize,
+                            alpha * flash
+                        );
+                    } else {
+                        this.drawBlock(
+                            this.boardCtx,
+                            x * this.blockSize,
+                            y * this.blockSize,
+                            this.colors[this.board[y][x]]
+                        );
+                    }
+                }
+            }
+        }
+        
+        // 繪製當前方塊
+        if (this.currentPiece && !this.gameOver) {
+            const colorObj = this.colors[this.getPieceColorIndex()];
+            for (let y = 0; y < this.currentPiece.length; y++) {
+                for (let x = 0; x < this.currentPiece[y].length; x++) {
+                    if (this.currentPiece[y][x]) {
+                        const drawX = (this.currentX + x) * this.blockSize;
+                        const drawY = (this.currentY + y) * this.blockSize;
+                        if (drawY >= 0) {
+                            this.drawBlock(this.boardCtx, drawX, drawY, colorObj);
+                        }
+                    }
+                }
+            }
+        }
+        
+        // 繪製粒子
+        this.drawParticles();
+    }
+    
+    drawNext() {
+        this.nextCtx.clearRect(0, 0, this.nextCanvas.width, this.nextCanvas.height);
+        
+        if (this.nextPiece) {
+            const colorIdx = this.getNextPieceColorIndex();
+            const colorObj = this.colors[colorIdx];
+            const blockSize = 25;
+            const offsetX = (this.nextCanvas.width - this.nextPiece[0].length * blockSize) / 2;
+            const offsetY = (this.nextCanvas.height - this.nextPiece.length * blockSize) / 2;
+            
+            for (let y = 0; y < this.nextPiece.length; y++) {
+                for (let x = 0; x < this.nextPiece[y].length; x++) {
+                    if (this.nextPiece[y][x]) {
+                        this.drawBlock(
+                            this.nextCtx,
+                            offsetX + x * blockSize,
+                            offsetY + y * blockSize,
+                            colorObj,
+                            blockSize
+                        );
+                    }
+                }
+            }
+        }
+    }
+    
+    getNextPieceColorIndex() {
+        for (let i = 0; i < this.pieces.length; i++) {
+            if (this.pieces[i] === this.nextPiece) {
+                return i + 1;
+            }
+        }
+        return 1;
+    }
+    
+    drawParticles() {
+        for (let i = this.particles.length - 1; i >= 0; i--) {
+            const p = this.particles[i];
+            
+            this.boardCtx.fillStyle = p.color;
+            this.boardCtx.globalAlpha = p.life;
+            this.boardCtx.shadowColor = p.color;
+            this.boardCtx.shadowBlur = 5;
+            this.boardCtx.fillRect(p.x, p.y, p.size, p.size);
+            
+            p.x += p.vx;
+            p.y += p.vy;
+            p.life -= 0.03;
+            p.vy += 0.1; // 重力
+            
+            if (p.life <= 0) {
+                this.particles.splice(i, 1);
+            }
+        }
+        
+        this.boardCtx.shadowBlur = 0;
+        this.boardCtx.globalAlpha = 1;
+    }
+    
+    updateScore() {
+        document.getElementById('score').textContent = this.score;
+        document.getElementById('levelDisplay').textContent = this.level;
+        document.getElementById('lines').textContent = this.lines;
+    }
+    
+    animate() {
+        // 更新粒子
+        if (this.isClearing) {
+            this.clearLinesAnimation();
+        }
+        
+        // 更新遊戲板
+        if (!this.gameOver && !this.isPaused) {
+            this.drawBoard();
+        }
+        
+        requestAnimationFrame(() => this.animate());
+    }
+}
+
+// 初始化遊戲
+const game = new Tetris();
