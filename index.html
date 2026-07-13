@@ -2,85 +2,108 @@
 <html lang="zh-TW">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>俄羅斯方塊 - NEON 版</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="theme-color" content="#0a0a0a">
+    <title>俄羅斯方塊 - NEON</title>
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
-    <div class="background-particles" id="particles"></div>
+    <!-- 背景粒子 -->
+    <div class="particles-container" id="particlesContainer"></div>
     
-    <div class="main-container">
-        <div class="game-wrapper">
-            <!-- 左側面板 -->
-            <div class="left-panel">
-                <div class="panel-card">
-                    <div class="panel-title">最高分</div>
-                    <div class="panel-value" id="highScore">0</div>
-                </div>
-                <div class="panel-card">
-                    <div class="panel-title">等級</div>
-                    <div class="panel-value level-display" id="levelDisplay">1</div>
-                </div>
-                <div class="combo-display" id="comboDisplay"></div>
-            </div>
-            
-            <!-- 遊戲主區域 -->
-            <div class="game-center">
-                <div class="game-board-container">
-                    <canvas id="board"></canvas>
-                    <div class="game-over-overlay" id="gameOverOverlay">
-                        <div class="game-over-text">遊戲結束</div>
-                        <div class="final-score" id="finalScore">0</div>
-                        <button class="restart-btn" onclick="game.start()">重新開始</button>
+    <div class="app">
+        <!-- 遊戲主區域 -->
+        <div class="game-layout">
+            <!-- 畫布區域 -->
+            <div class="canvas-wrapper">
+                <canvas id="board"></canvas>
+                
+                <!-- 覆蓋層 -->
+                <div class="overlay game-over-overlay" id="gameOverOverlay">
+                    <div class="overlay-content">
+                        <div class="overlay-title">遊戲結束</div>
+                        <div class="overlay-score" id="finalScore">0</div>
+                        <button class="overlay-btn" onclick="game.restart()">重新開始</button>
                     </div>
-                    <div class="pause-overlay" id="pauseOverlay">
-                        <div class="pause-text">暫停中</div>
+                </div>
+                
+                <div class="overlay pause-overlay" id="pauseOverlay">
+                    <div class="overlay-content">
+                        <div class="overlay-title">暫停中</div>
+                        <div class="overlay-hint">點擊繼續</div>
                     </div>
                 </div>
             </div>
             
-            <!-- 右側面板 -->
-            <div class="right-panel">
-                <div class="panel-card">
-                    <div class="panel-title">分數</div>
-                    <div class="panel-value" id="score">0</div>
+            <!-- 側邊欄 -->
+            <div class="sidebar">
+                <!-- 分數卡片 -->
+                <div class="stat-card">
+                    <div class="stat-label">分數</div>
+                    <div class="stat-value" id="score">0</div>
                 </div>
-                <div class="panel-card">
-                    <div class="panel-title">消除行數</div>
-                    <div class="panel-value" id="lines">0</div>
+                
+                <div class="stat-card">
+                    <div class="stat-label">最高分</div>
+                    <div class="stat-value" id="highScore">0</div>
                 </div>
-                <div class="next-piece-panel">
-                    <div class="panel-title">下一個</div>
+                
+                <div class="stat-card">
+                    <div class="stat-label">等級</div>
+                    <div class="stat-value" id="level">1</div>
+                </div>
+                
+                <div class="stat-card">
+                    <div class="stat-label">行數</div>
+                    <div class="stat-value" id="lines">0</div>
+                </div>
+                
+                <!-- 連擊提示 -->
+                <div class="combo-text" id="comboText"></div>
+                
+                <!-- 下一個方塊 -->
+                <div class="next-box">
+                    <div class="next-label">下一個</div>
                     <canvas id="next"></canvas>
-                </div>
-                <div class="control-buttons">
-                    <button class="game-btn start-btn" onclick="game.start()">
-                        <span>🎮</span> 開始
-                    </button>
-                    <button class="game-btn pause-btn" onclick="game.togglePause()">
-                        <span>⏯️</span> 暫停
-                    </button>
                 </div>
             </div>
         </div>
         
-        <!-- 操作說明 -->
-        <div class="controls-info">
-            <div class="control-item">
-                <span class="key">← →</span> 移動
+        <!-- 手機觸控按鈕 -->
+        <div class="touch-controls" id="touchControls">
+            <div class="touch-row top-row">
+                <button class="touch-btn" id="btnUp">
+                    <svg viewBox="0 0 24 24" width="28" height="28"><path d="M12 4l-8 8h6v8h4v-8h6z" fill="currentColor"/></svg>
+                </button>
             </div>
-            <div class="control-item">
-                <span class="key">↑</span> 旋轉
+            <div class="touch-row middle-row">
+                <button class="touch-btn" id="btnLeft">
+                    <svg viewBox="0 0 24 24" width="28" height="28"><path d="M4 12l8-8v6h8v4h-8v6z" fill="currentColor"/></svg>
+                </button>
+                <button class="touch-btn drop-btn" id="btnDrop">
+                    <svg viewBox="0 0 24 24" width="28" height="28"><path d="M12 20l-8-8h6V4h4v8h6z" fill="currentColor"/></svg>
+                </button>
+                <button class="touch-btn" id="btnRight">
+                    <svg viewBox="0 0 24 24" width="28" height="28"><path d="M20 12l-8 8v-6H4v-4h8V4z" fill="currentColor"/></svg>
+                </button>
             </div>
-            <div class="control-item">
-                <span class="key">↓</span> 加速
-            </div>
-            <div class="control-item">
-                <span class="key">空白鍵</span> 直接落下
-            </div>
-            <div class="control-item">
-                <span class="key">P</span> 暫停
-            </div>
+        </div>
+        
+        <!-- 選單按鈕 -->
+        <div class="action-buttons">
+            <button class="action-btn primary" id="startBtn">開始遊戲</button>
+            <button class="action-btn" id="pauseBtn">暫停</button>
+        </div>
+        
+        <!-- 鍵盤提示 (僅桌面版顯示) -->
+        <div class="keyboard-hints">
+            <span class="hint"><kbd>← →</kbd> 移動</span>
+            <span class="hint"><kbd>↑</kbd> 旋轉</span>
+            <span class="hint"><kbd>↓</kbd> 加速</span>
+            <span class="hint"><kbd>Space</kbd> 落下</span>
+            <span class="hint"><kbd>P</kbd> 暫停</span>
         </div>
     </div>
 
