@@ -1,7 +1,7 @@
-// === 俄羅斯方塊 - 手機電腦通用版 ===
+// === 俄羅斯方塊 - 完整版 ===
 class Tetris {
     constructor() {
-        // Canvas
+        // Canvas 元素
         this.boardCanvas = document.getElementById('board');
         this.nextCanvas = document.getElementById('next');
         this.ctx = this.boardCanvas.getContext('2d');
@@ -10,7 +10,7 @@ class Tetris {
         // 遊戲參數
         this.COLS = 10;
         this.ROWS = 20;
-        this.BLOCK = 30; // 每個方塊像素
+        this.BLOCK = 30;
         
         // 遊戲狀態
         this.board = [];
@@ -24,7 +24,7 @@ class Tetris {
         this.isGameOver = false;
         this.loopId = null;
         
-        // 當前方塊
+        // 方塊狀態
         this.piece = null;
         this.nextPiece = null;
         this.pieceX = 0;
@@ -35,40 +35,41 @@ class Tetris {
         this.clearFrame = 0;
         this.isClearing = false;
         
-        // 粒子
+        // 粒子系統
         this.particles = [];
         
-        // 觸控狀態
+        // 觸控計時器
         this.touchTimers = {};
         
-        // 方塊形狀
+        // 方塊形狀定義
         this.SHAPES = [
-            [[1,1,1,1]],                          // I
-            [[1,1],[1,1]],                        // O
-            [[0,1,0],[1,1,1]],                    // T
-            [[0,1,1],[1,1,0]],                    // S
-            [[1,1,0],[0,1,1]],                    // Z
-            [[1,0,0],[1,1,1]],                    // J
-            [[0,0,1],[1,1,1]]                     // L
+            [[1, 1, 1, 1]],                          // I
+            [[1, 1], [1, 1]],                        // O
+            [[0, 1, 0], [1, 1, 1]],                  // T
+            [[0, 1, 1], [1, 1, 0]],                  // S
+            [[1, 1, 0], [0, 1, 1]],                  // Z
+            [[1, 0, 0], [1, 1, 1]],                  // J
+            [[0, 0, 1], [1, 1, 1]]                   // L
         ];
         
-        // 霓虹顏色
+        // 霓虹色彩
         this.COLORS = [
             null,
-            { fill: '#00ffff', glow: '#00ffff' }, // I - cyan
-            { fill: '#ffff00', glow: '#ffff00' }, // O - yellow
-            { fill: '#cc00ff', glow: '#cc00ff' }, // T - purple
-            { fill: '#00ff00', glow: '#00ff00' }, // S - green
-            { fill: '#ff3333', glow: '#ff0000' }, // Z - red
-            { fill: '#0066ff', glow: '#0066ff' }, // J - blue
-            { fill: '#ff8800', glow: '#ff8800' }  // L - orange
+            { fill: '#00ffff', glow: '#00ffff' },    // I - cyan
+            { fill: '#ffff00', glow: '#ffff00' },    // O - yellow
+            { fill: '#cc00ff', glow: '#cc00ff' },    // T - purple
+            { fill: '#00ff00', glow: '#00ff00' },    // S - green
+            { fill: '#ff3333', glow: '#ff0000' },    // Z - red
+            { fill: '#0066ff', glow: '#0066ff' },    // J - blue
+            { fill: '#ff8800', glow: '#ff8800' }     // L - orange
         ];
         
         this.init();
     }
     
+    // === 初始化 ===
     init() {
-        // Canvas 實際大小
+        // 設定 Canvas 實際大小
         this.boardCanvas.width = this.COLS * this.BLOCK;
         this.boardCanvas.height = this.ROWS * this.BLOCK;
         this.nextCanvas.width = this.BLOCK * 4;
@@ -77,73 +78,88 @@ class Tetris {
         // 顯示最高分
         document.getElementById('highScore').textContent = this.highScore;
         
-        // 事件綁定
+        // 綁定事件
         this.bindEvents();
         
-        // 背景粒子
-        this.createBgParticles();
+        // 建立背景特效
+        this.createBgStars();
+        this.createBgFloatBlocks();
         
-        // 繪製空畫面
+        // 初始畫面
         this.resetBoard();
         this.draw();
         this.drawNext();
         
-        // 動畫循環
+        // 啟動動畫循環
         this.animate();
     }
     
+    // === 事件綁定 ===
     bindEvents() {
-        // 鍵盤
+        // 鍵盤事件
         document.addEventListener('keydown', (e) => this.onKey(e));
         
-        // 觸控按鈕
-        const btnMap = {
+        // 觸控按鈕事件
+        const btnActions = {
             btnLeft: 'left',
             btnRight: 'right',
-            btnUp: 'rotate',
-            btnDown: 'down',
+            btnRotate: 'rotate',
             btnDrop: 'drop'
         };
         
-        Object.entries(btnMap).forEach(([id, action]) => {
+        Object.entries(btnActions).forEach(([id, action]) => {
             const btn = document.getElementById(id);
             if (!btn) return;
             
             btn.addEventListener('pointerdown', (e) => {
                 e.preventDefault();
                 this.mobileAction(action);
-                // 長按移動
-                if (action === 'left' || action === 'right' || action === 'down') {
+                // 左右移動支援長按
+                if (action === 'left' || action === 'right') {
                     this.touchTimers[action] = setInterval(() => this.mobileAction(action), 80);
                 }
             });
             
             btn.addEventListener('pointerup', (e) => {
                 e.preventDefault();
-                if (this.touchTimers[action]) {
-                    clearInterval(this.touchTimers[action]);
-                    this.touchTimers[action] = null;
-                }
+                this.clearTouchTimer(action);
             });
             
             btn.addEventListener('pointerleave', () => {
-                if (this.touchTimers[action]) {
-                    clearInterval(this.touchTimers[action]);
-                    this.touchTimers[action] = null;
-                }
+                this.clearTouchTimer(action);
+            });
+            
+            btn.addEventListener('pointercancel', () => {
+                this.clearTouchTimer(action);
             });
         });
+        
+        // 選單按鈕
+        document.getElementById('startBtn').addEventListener('click', () => this.start());
+        document.getElementById('pauseBtn').addEventListener('click', () => this.togglePause());
+        document.getElementById('restartBtn').addEventListener('click', () => this.start());
         
         // 暫停覆蓋層點擊
         document.getElementById('pauseOverlay').addEventListener('click', () => {
             if (this.isPaused) this.togglePause();
         });
         
-        // 選單按鈕
-        document.getElementById('startBtn').addEventListener('click', () => this.start());
-        document.getElementById('pauseBtn').addEventListener('click', () => this.togglePause());
+        // 遊戲說明彈窗
+        document.getElementById('helpBtn').addEventListener('click', () => {
+            document.getElementById('helpModal').classList.add('active');
+        });
         
-        // 遊戲板觸控手勢
+        document.getElementById('closeHelp').addEventListener('click', () => {
+            document.getElementById('helpModal').classList.remove('active');
+        });
+        
+        document.getElementById('helpModal').addEventListener('click', (e) => {
+            if (e.target === document.getElementById('helpModal')) {
+                document.getElementById('helpModal').classList.remove('active');
+            }
+        });
+        
+        // 畫布觸控手勢
         let touchStartX = 0, touchStartY = 0, touchStartTime = 0;
         
         this.boardCanvas.addEventListener('touchstart', (e) => {
@@ -181,6 +197,55 @@ class Tetris {
         });
     }
     
+    clearTouchTimer(action) {
+        if (this.touchTimers[action]) {
+            clearInterval(this.touchTimers[action]);
+            this.touchTimers[action] = null;
+        }
+    }
+    
+    // === 鍵盤處理 ===
+    onKey(e) {
+        if (this.isGameOver) {
+            if (e.key === 'Enter' || e.key === ' ') {
+                e.preventDefault();
+                this.start();
+            }
+            return;
+        }
+        
+        if (e.key === 'p' || e.key === 'P') {
+            this.togglePause();
+            return;
+        }
+        
+        if (!this.isRunning || this.isPaused || this.isClearing) return;
+        
+        switch (e.key) {
+            case 'ArrowLeft': e.preventDefault(); this.moveLeft(); break;
+            case 'ArrowRight': e.preventDefault(); this.moveRight(); break;
+            case 'ArrowDown': e.preventDefault(); this.softDrop(); break;
+            case 'ArrowUp': e.preventDefault(); this.rotate(); break;
+            case ' ': e.preventDefault(); this.hardDrop(); break;
+        }
+    }
+    
+    // === 手機按鈕處理 ===
+    mobileAction(action) {
+        if (this.isGameOver) {
+            if (action === 'drop') this.start();
+            return;
+        }
+        if (!this.isRunning || this.isPaused || this.isClearing) return;
+        
+        switch (action) {
+            case 'left': this.moveLeft(); break;
+            case 'right': this.moveRight(); break;
+            case 'rotate': this.rotate(); break;
+            case 'drop': this.hardDrop(); break;
+        }
+    }
+    
     // === 遊戲流程 ===
     start() {
         this.stop();
@@ -205,8 +270,6 @@ class Tetris {
         this.runLoop();
     }
     
-    restart() { this.start(); }
-    
     stop() {
         this.isRunning = false;
         if (this.loopId) {
@@ -219,14 +282,13 @@ class Tetris {
         this.isGameOver = true;
         this.stop();
         
-        // 更新最高分
         if (this.score > this.highScore) {
             this.highScore = this.score;
             localStorage.setItem('tetrisHS', this.highScore);
             document.getElementById('highScore').textContent = this.highScore;
         }
         
-        document.getElementById('finalScore').textContent = `分數: ${this.score}`;
+        document.getElementById('finalScore').textContent = '分數: ' + this.score;
         document.getElementById('gameOverOverlay').classList.add('active');
         
         // 爆炸粒子
@@ -293,7 +355,8 @@ class Tetris {
         this.drawNext();
     }
     
-    canMove(px, py, shape = this.piece) {
+    canMove(px, py, shape = null) {
+        shape = shape || this.piece;
         for (let y = 0; y < shape.length; y++) {
             for (let x = 0; x < shape[y].length; x++) {
                 if (!shape[y][x]) continue;
@@ -318,7 +381,6 @@ class Tetris {
                 }
             }
         }
-        // 落下粒子
         this.spawnDropParticles();
         this.checkLines();
     }
@@ -369,6 +431,7 @@ class Tetris {
         const rows = this.piece.length;
         const cols = this.piece[0].length;
         const rot = [];
+        
         for (let x = 0; x < cols; x++) {
             rot[x] = [];
             for (let y = rows - 1; y >= 0; y--) {
@@ -376,7 +439,7 @@ class Tetris {
             }
         }
         
-        // 牆壁踢
+        // 牆壁踢檢測
         for (const kick of [0, -1, 1, -2, 2]) {
             if (this.canMove(this.pieceX + kick, this.pieceY, rot)) {
                 this.piece = rot;
@@ -401,7 +464,9 @@ class Tetris {
             this.combo++;
             this.score += full.length * 100 * this.level + this.combo * 50;
             
-            if (this.combo > 1) this.showCombo(this.combo);
+            if (this.combo > 1) {
+                this.showCombo(this.combo);
+            }
         } else {
             this.combo = 0;
             this.spawnPiece();
@@ -409,12 +474,19 @@ class Tetris {
         this.updateDisplay();
     }
     
+    showCombo(n) {
+        const el = document.getElementById('comboText');
+        el.textContent = n + 'x 連擊!';
+        el.classList.add('show');
+        setTimeout(() => el.classList.remove('show'), 1000);
+    }
+    
     clearAnimation() {
         if (!this.isClearing || this.clearing.length === 0) return;
         
         this.clearFrame++;
         if (this.clearFrame >= 12) {
-            // 移除行
+            // 移除完成的行
             this.clearing.sort((a, b) => b - a);
             for (const y of this.clearing) {
                 this.board.splice(y, 1);
@@ -425,7 +497,7 @@ class Tetris {
             this.lines += this.clearing.length;
             this.level = Math.floor(this.lines / 10) + 1;
             
-            // 更新速度
+            // 更新遊戲速度
             this.stop();
             if (this.isRunning && !this.isPaused) {
                 this.runLoop();
@@ -437,13 +509,6 @@ class Tetris {
             this.updateDisplay();
         }
         this.draw();
-    }
-    
-    showCombo(n) {
-        const el = document.getElementById('comboText');
-        el.textContent = `${n}x 連擊!`;
-        el.classList.add('show');
-        setTimeout(() => el.classList.remove('show'), 1000);
     }
     
     // === 粒子系統 ===
@@ -488,22 +553,22 @@ class Tetris {
     }
     
     draw() {
-        const ctx = this.ctx;
-        ctx.clearRect(0, 0, this.boardCanvas.width, this.boardCanvas.height);
+        this.ctx.clearRect(0, 0, this.boardCanvas.width, this.boardCanvas.height);
         
-        // 網格
-        ctx.strokeStyle = 'rgba(255,255,255,0.03)';
+        // 網格線
+        this.ctx.strokeStyle = 'rgba(255, 255, 255, 0.03)';
+        this.ctx.lineWidth = 1;
         for (let x = 0; x <= this.COLS; x++) {
-            ctx.beginPath();
-            ctx.moveTo(x * this.BLOCK, 0);
-            ctx.lineTo(x * this.BLOCK, this.ROWS * this.BLOCK);
-            ctx.stroke();
+            this.ctx.beginPath();
+            this.ctx.moveTo(x * this.BLOCK, 0);
+            this.ctx.lineTo(x * this.BLOCK, this.ROWS * this.BLOCK);
+            this.ctx.stroke();
         }
         for (let y = 0; y <= this.ROWS; y++) {
-            ctx.beginPath();
-            ctx.moveTo(0, y * this.BLOCK);
-            ctx.lineTo(this.COLS * this.BLOCK, y * this.BLOCK);
-            ctx.stroke();
+            this.ctx.beginPath();
+            this.ctx.moveTo(0, y * this.BLOCK);
+            this.ctx.lineTo(this.COLS * this.BLOCK, y * this.BLOCK);
+            this.ctx.stroke();
         }
         
         // 已固定的方塊
@@ -511,11 +576,11 @@ class Tetris {
             for (let x = 0; x < this.COLS; x++) {
                 if (this.board[y][x]) {
                     if (this.isClearing && this.clearing.includes(y)) {
-                        const a = 1 - this.clearFrame / 12;
-                        const f = Math.sin(this.clearFrame * 0.7) * 0.5 + 0.5;
-                        this.drawBlock(ctx, x, y, { fill: '#fff', glow: '#fff' }, a * f);
+                        const alpha = 1 - this.clearFrame / 12;
+                        const flash = Math.sin(this.clearFrame * 0.7) * 0.5 + 0.5;
+                        this.drawBlock(x, y, { fill: '#ffffff', glow: '#ffffff' }, alpha * flash);
                     } else {
-                        this.drawBlock(ctx, x, y, this.COLORS[this.board[y][x]]);
+                        this.drawBlock(x, y, this.COLORS[this.board[y][x]]);
                     }
                 }
             }
@@ -530,50 +595,50 @@ class Tetris {
                     if (!this.piece[y][x]) continue;
                     const dy = this.pieceY + y;
                     if (dy >= 0) {
-                        this.drawBlock(ctx, this.pieceX + x, dy, c);
+                        this.drawBlock(this.pieceX + x, dy, c);
                     }
                 }
             }
         }
         
         // 粒子
-        this.drawParticles(ctx);
+        this.drawParticles();
     }
     
-    drawBlock(ctx, bx, by, color, alpha = 1) {
+    drawBlock(bx, by, color, alpha = 1) {
         const x = bx * this.BLOCK;
         const y = by * this.BLOCK;
         const s = this.BLOCK;
         
-        ctx.globalAlpha = alpha;
-        ctx.shadowColor = color.glow;
-        ctx.shadowBlur = 8;
-        ctx.fillStyle = color.fill;
-        ctx.fillRect(x + 1, y + 1, s - 2, s - 2);
+        this.ctx.globalAlpha = alpha;
+        this.ctx.shadowColor = color.glow;
+        this.ctx.shadowBlur = 8;
+        this.ctx.fillStyle = color.fill;
+        this.ctx.fillRect(x + 1, y + 1, s - 2, s - 2);
         
-        // 高光
-        const g = ctx.createLinearGradient(x, y, x + s, y + s);
-        g.addColorStop(0, 'rgba(255,255,255,0.25)');
-        g.addColorStop(0.5, 'rgba(255,255,255,0.05)');
-        g.addColorStop(1, 'rgba(0,0,0,0.2)');
-        ctx.fillStyle = g;
-        ctx.fillRect(x + 1, y + 1, s - 2, s - 2);
+        // 高光效果
+        const g = this.ctx.createLinearGradient(x, y, x + s, y + s);
+        g.addColorStop(0, 'rgba(255, 255, 255, 0.25)');
+        g.addColorStop(0.5, 'rgba(255, 255, 255, 0.05)');
+        g.addColorStop(1, 'rgba(0, 0, 0, 0.2)');
+        this.ctx.fillStyle = g;
+        this.ctx.fillRect(x + 1, y + 1, s - 2, s - 2);
         
-        ctx.strokeStyle = color.glow;
-        ctx.lineWidth = 1.5;
-        ctx.strokeRect(x + 1, y + 1, s - 2, s - 2);
+        // 邊框
+        this.ctx.strokeStyle = color.glow;
+        this.ctx.lineWidth = 1.5;
+        this.ctx.strokeRect(x + 1, y + 1, s - 2, s - 2);
         
-        ctx.shadowBlur = 0;
-        ctx.globalAlpha = 1;
+        this.ctx.shadowBlur = 0;
+        this.ctx.globalAlpha = 1;
     }
     
     drawNext() {
-        const ctx = this.nextCtx;
-        ctx.clearRect(0, 0, this.nextCanvas.width, this.nextCanvas.height);
+        this.nextCtx.clearRect(0, 0, this.nextCanvas.width, this.nextCanvas.height);
         if (!this.nextPiece) return;
         
-        const idx = this.nextColorIndex();
-        const c = this.COLORS[idx];
+        const ci = this.nextColorIndex();
+        const c = this.COLORS[ci];
         const bs = 25;
         const ox = (this.nextCanvas.width - this.nextPiece[0].length * bs) / 2;
         const oy = (this.nextCanvas.height - this.nextPiece.length * bs) / 2;
@@ -581,21 +646,25 @@ class Tetris {
         for (let y = 0; y < this.nextPiece.length; y++) {
             for (let x = 0; x < this.nextPiece[y].length; x++) {
                 if (!this.nextPiece[y][x]) continue;
+                
                 const px = ox + x * bs;
                 const py = oy + y * bs;
-                ctx.shadowColor = c.glow;
-                ctx.shadowBlur = 8;
-                ctx.fillStyle = c.fill;
-                ctx.fillRect(px + 1, py + 1, bs - 2, bs - 2);
-                const g = ctx.createLinearGradient(px, py, px + bs, py + bs);
-                g.addColorStop(0, 'rgba(255,255,255,0.25)');
-                g.addColorStop(1, 'rgba(0,0,0,0.2)');
-                ctx.fillStyle = g;
-                ctx.fillRect(px + 1, py + 1, bs - 2, bs - 2);
-                ctx.strokeStyle = c.glow;
-                ctx.lineWidth = 1.5;
-                ctx.strokeRect(px + 1, py + 1, bs - 2, bs - 2);
-                ctx.shadowBlur = 0;
+                
+                this.nextCtx.shadowColor = c.glow;
+                this.nextCtx.shadowBlur = 8;
+                this.nextCtx.fillStyle = c.fill;
+                this.nextCtx.fillRect(px + 1, py + 1, bs - 2, bs - 2);
+                
+                const g = this.nextCtx.createLinearGradient(px, py, px + bs, py + bs);
+                g.addColorStop(0, 'rgba(255, 255, 255, 0.25)');
+                g.addColorStop(1, 'rgba(0, 0, 0, 0.2)');
+                this.nextCtx.fillStyle = g;
+                this.nextCtx.fillRect(px + 1, py + 1, bs - 2, bs - 2);
+                
+                this.nextCtx.strokeStyle = c.glow;
+                this.nextCtx.lineWidth = 1.5;
+                this.nextCtx.strokeRect(px + 1, py + 1, bs - 2, bs - 2);
+                this.nextCtx.shadowBlur = 0;
             }
         }
     }
@@ -607,86 +676,63 @@ class Tetris {
         return 1;
     }
     
-    drawParticles(ctx) {
+    drawParticles() {
         for (let i = this.particles.length - 1; i >= 0; i--) {
             const p = this.particles[i];
-            ctx.globalAlpha = p.life;
-            ctx.fillStyle = p.color;
-            ctx.shadowColor = p.color;
-            ctx.shadowBlur = 4;
-            ctx.fillRect(p.x, p.y, p.size, p.size);
+            
+            this.ctx.globalAlpha = p.life;
+            this.ctx.fillStyle = p.color;
+            this.ctx.shadowColor = p.color;
+            this.ctx.shadowBlur = 4;
+            this.ctx.fillRect(p.x, p.y, p.size, p.size);
+            
             p.x += p.vx;
             p.y += p.vy;
             p.life -= 0.03;
             p.vy += 0.08;
+            
             if (p.life <= 0) this.particles.splice(i, 1);
         }
-        ctx.shadowBlur = 0;
-        ctx.globalAlpha = 1;
+        this.ctx.shadowBlur = 0;
+        this.ctx.globalAlpha = 1;
     }
     
-    // === 事件處理 ===
-    onKey(e) {
-        if (this.isGameOver) {
-            if (e.key === 'Enter' || e.key === ' ') {
-                e.preventDefault();
-                this.start();
-            }
-            return;
-        }
-        
-        if (e.key === 'p' || e.key === 'P') {
-            this.togglePause();
-            return;
-        }
-        
-        if (!this.isRunning || this.isPaused || this.isClearing) return;
-        
-        switch (e.key) {
-            case 'ArrowLeft': e.preventDefault(); this.moveLeft(); break;
-            case 'ArrowRight': e.preventDefault(); this.moveRight(); break;
-            case 'ArrowDown': e.preventDefault(); this.softDrop(); break;
-            case 'ArrowUp': e.preventDefault(); this.rotate(); break;
-            case ' ': e.preventDefault(); this.hardDrop(); break;
+    // === 背景特效 ===
+    createBgStars() {
+        const container = document.getElementById('bgStars');
+        for (let i = 0; i < 40; i++) {
+            const star = document.createElement('div');
+            star.className = 'star';
+            star.style.left = Math.random() * 100 + '%';
+            star.style.top = Math.random() * 100 + '%';
+            const size = Math.random() * 3 + 1;
+            star.style.width = size + 'px';
+            star.style.height = size + 'px';
+            star.style.animationDelay = Math.random() * 3 + 's';
+            star.style.animationDuration = (Math.random() * 2 + 1) + 's';
+            container.appendChild(star);
         }
     }
     
-    mobileAction(action) {
-        if (this.isGameOver) {
-            if (action === 'drop') this.start();
-            return;
-        }
-        if (!this.isRunning || this.isPaused || this.isClearing) return;
-        
-        switch (action) {
-            case 'left': this.moveLeft(); break;
-            case 'right': this.moveRight(); break;
-            case 'down': this.softDrop(); break;
-            case 'rotate': this.rotate(); break;
-            case 'drop': this.hardDrop(); break;
-        }
-    }
-    
-    // === 背景粒子 ===
-    createBgParticles() {
-        const container = document.getElementById('particlesContainer');
+    createBgFloatBlocks() {
+        const container = document.getElementById('bgFloatBlocks');
         const colors = ['#00ffff', '#ff00ff', '#ffff00', '#00ff00', '#ff8800', '#0066ff'];
-        for (let i = 0; i < 25; i++) {
-            const p = document.createElement('div');
-            p.className = 'particle';
-            p.style.left = Math.random() * 100 + '%';
-            const size = Math.random() * 4 + 2;
-            p.style.width = size + 'px';
-            p.style.height = size + 'px';
-            p.style.background = colors[Math.floor(Math.random() * colors.length)];
-            p.style.boxShadow = `0 0 ${size * 2}px ${p.style.background}`;
-            p.style.animationDuration = (Math.random() * 5 + 4) + 's';
-            p.style.animationDelay = Math.random() * 5 + 's';
-            container.appendChild(p);
+        
+        for (let i = 0; i < 8; i++) {
+            const block = document.createElement('div');
+            block.className = 'float-block';
+            block.style.left = Math.random() * 90 + '%';
+            const size = Math.random() * 30 + 20;
+            block.style.width = size + 'px';
+            block.style.height = size + 'px';
+            block.style.background = colors[Math.floor(Math.random() * colors.length)];
+            block.style.animationDuration = (Math.random() * 10 + 12) + 's';
+            block.style.animationDelay = Math.random() * 10 + 's';
+            container.appendChild(block);
         }
     }
     
-    // === 工具 ===
+    // === 工具函數 ===
     updateDisplay() {
         document.getElementById('score').textContent = this.score;
         document.getElementById('level').textContent = this.level;
@@ -695,18 +741,18 @@ class Tetris {
     
     animate() {
         if (this.isClearing) this.clearAnimation();
+        
         if (this.isRunning && !this.isPaused && !this.isGameOver) {
             this.draw();
         }
-        // 持續更新粒子（包含遊戲結束後）
+        
         if (this.particles.length > 0) {
-            const ctx = this.ctx;
-            ctx.clearRect(0, 0, this.boardCanvas.width, this.boardCanvas.height);
             this.draw();
         }
+        
         requestAnimationFrame(() => this.animate());
     }
 }
 
-// 啟動
+// === 啟動遊戲 ===
 const game = new Tetris();
