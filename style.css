@@ -1,0 +1,413 @@
+/* style.css */
+:root {
+    --neon-cyan: #00f0f0;
+    --neon-yellow: #f0f000;
+    --neon-purple: #a000f0;
+    --neon-green: #00f000;
+    --neon-red: #f00000;
+    --neon-blue: #0060f0;
+    --neon-orange: #f0a000;
+    --bg-dark: #0a0a0a;
+    --bg-panel: #1a1a2e;
+    --text-glow: #e0e0ff;
+    --border-glow: rgba(100, 100, 255, 0.3);
+}
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    background: linear-gradient(135deg, #0a0a0a 0%, #1a1a2e 50%, #0a0a0a 100%);
+    font-family: 'Segoe UI', 'Arial', sans-serif;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+    overflow: hidden;
+    position: relative;
+}
+
+/* 背景粒子動畫 */
+.background-particles {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+    z-index: 0;
+}
+
+.particle {
+    position: absolute;
+    background: var(--neon-cyan);
+    border-radius: 50%;
+    animation: float 6s infinite;
+    opacity: 0;
+    box-shadow: 0 0 10px var(--neon-cyan);
+}
+
+@keyframes float {
+    0% {
+        transform: translateY(100vh) scale(0);
+        opacity: 0;
+    }
+    10% {
+        opacity: 0.8;
+    }
+    90% {
+        opacity: 0.2;
+    }
+    100% {
+        transform: translateY(-100px) scale(1);
+        opacity: 0;
+    }
+}
+
+/* 主容器 */
+.main-container {
+    position: relative;
+    z-index: 1;
+    background: rgba(10, 10, 20, 0.8);
+    border-radius: 30px;
+    padding: 40px;
+    box-shadow: 
+        0 0 30px var(--border-glow),
+        inset 0 0 30px rgba(0, 0, 0, 0.5);
+    backdrop-filter: blur(10px);
+    border: 1px solid var(--border-glow);
+    animation: containerPulse 3s ease-in-out infinite;
+}
+
+@keyframes containerPulse {
+    0%, 100% {
+        box-shadow: 0 0 30px var(--border-glow);
+    }
+    50% {
+        box-shadow: 0 0 50px rgba(100, 100, 255, 0.5);
+    }
+}
+
+.game-wrapper {
+    display: flex;
+    gap: 30px;
+    align-items: flex-start;
+}
+
+/* 左右面板通用樣式 */
+.left-panel, .right-panel {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+    min-width: 150px;
+}
+
+.panel-card {
+    background: linear-gradient(135deg, rgba(20, 20, 40, 0.9), rgba(30, 30, 50, 0.9));
+    border: 2px solid var(--border-glow);
+    border-radius: 15px;
+    padding: 20px;
+    text-align: center;
+    position: relative;
+    overflow: hidden;
+    box-shadow: 0 0 15px rgba(100, 100, 255, 0.2);
+    transition: all 0.3s ease;
+}
+
+.panel-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 0 25px rgba(100, 100, 255, 0.4);
+}
+
+.panel-card::before {
+    content: '';
+    position: absolute;
+    top: -50%;
+    left: -50%;
+    width: 200%;
+    height: 200%;
+    background: radial-gradient(circle, rgba(100, 100, 255, 0.1) 0%, transparent 70%);
+    animation: rotate 10s linear infinite;
+}
+
+@keyframes rotate {
+    100% {
+        transform: rotate(360deg);
+    }
+}
+
+.panel-title {
+    color: #888;
+    font-size: 12px;
+    text-transform: uppercase;
+    letter-spacing: 2px;
+    margin-bottom: 10px;
+    position: relative;
+}
+
+.panel-value {
+    color: var(--text-glow);
+    font-size: 32px;
+    font-weight: bold;
+    text-shadow: 0 0 10px var(--neon-cyan);
+    position: relative;
+    animation: valueGlow 2s ease-in-out infinite;
+}
+
+@keyframes valueGlow {
+    0%, 100% {
+        text-shadow: 0 0 10px var(--neon-cyan);
+    }
+    50% {
+        text-shadow: 0 0 20px var(--neon-cyan), 0 0 30px var(--neon-blue);
+    }
+}
+
+/* 連擊顯示 */
+.combo-display {
+    text-align: center;
+    font-size: 24px;
+    color: var(--neon-yellow);
+    text-shadow: 0 0 20px var(--neon-yellow);
+    opacity: 0;
+    transform: scale(0);
+    transition: all 0.3s ease;
+    position: relative;
+}
+
+.combo-display.active {
+    opacity: 1;
+    transform: scale(1);
+    animation: comboPop 0.6s ease-out;
+}
+
+@keyframes comboPop {
+    0% {
+        transform: scale(0);
+        opacity: 0;
+    }
+    50% {
+        transform: scale(1.3);
+        opacity: 1;
+    }
+    100% {
+        transform: scale(1);
+        opacity: 0.8;
+    }
+}
+
+/* 遊戲板容器 */
+.game-center {
+    position: relative;
+}
+
+.game-board-container {
+    position: relative;
+    border-radius: 15px;
+    overflow: hidden;
+    box-shadow: 
+        0 0 40px rgba(0, 240, 240, 0.3),
+        inset 0 0 20px rgba(0, 0, 0, 0.5);
+    border: 3px solid rgba(0, 240, 240, 0.3);
+}
+
+canvas#board {
+    display: block;
+    background: #0a0a0a;
+    width: 300px;
+    height: 600px;
+}
+
+/* 覆蓋層 */
+.game-over-overlay, .pause-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    background: rgba(0, 0, 0, 0.85);
+    backdrop-filter: blur(5px);
+    transition: opacity 0.3s ease;
+}
+
+.game-over-overlay {
+    display: none;
+}
+
+.pause-overlay {
+    display: none;
+}
+
+.game-over-overlay.active, .pause-overlay.active {
+    display: flex;
+}
+
+.game-over-text {
+    font-size: 48px;
+    color: var(--neon-red);
+    text-shadow: 0 0 20px var(--neon-red);
+    font-weight: bold;
+    margin-bottom: 20px;
+    animation: shake 0.5s ease-in-out;
+}
+
+@keyframes shake {
+    0%, 100% { transform: translateX(0); }
+    25% { transform: translateX(-10px); }
+    75% { transform: translateX(10px); }
+}
+
+.pause-text {
+    font-size: 48px;
+    color: var(--neon-yellow);
+    text-shadow: 0 0 20px var(--neon-yellow);
+    font-weight: bold;
+}
+
+.final-score {
+    font-size: 24px;
+    color: var(--text-glow);
+    margin-bottom: 20px;
+}
+
+/* 下一個方塊面板 */
+.next-piece-panel {
+    background: linear-gradient(135deg, rgba(20, 20, 40, 0.9), rgba(30, 30, 50, 0.9));
+    border: 2px solid var(--border-glow);
+    border-radius: 15px;
+    padding: 20px;
+    text-align: center;
+    box-shadow: 0 0 15px rgba(100, 100, 255, 0.2);
+}
+
+canvas#next {
+    display: block;
+    margin: 10px auto;
+    background: #0a0a0a;
+    border-radius: 10px;
+    box-shadow: inset 0 0 10px rgba(0, 0, 0, 0.5);
+}
+
+/* 按鈕樣式 */
+.control-buttons {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.game-btn {
+    background: linear-gradient(135deg, rgba(20, 20, 40, 0.9), rgba(30, 30, 50, 0.9));
+    border: 2px solid var(--border-glow);
+    color: var(--text-glow);
+    padding: 12px 20px;
+    border-radius: 25px;
+    cursor: pointer;
+    font-size: 16px;
+    font-weight: bold;
+    transition: all 0.3s ease;
+    position: relative;
+    overflow: hidden;
+    text-shadow: 0 0 5px var(--neon-cyan);
+}
+
+.game-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 0 20px var(--neon-cyan);
+    border-color: var(--neon-cyan);
+    background: linear-gradient(135deg, rgba(0, 240, 240, 0.2), rgba(0, 100, 240, 0.2));
+}
+
+.game-btn:active {
+    transform: translateY(0);
+}
+
+.game-btn span {
+    margin-right: 5px;
+}
+
+.restart-btn {
+    background: linear-gradient(135deg, rgba(240, 0, 0, 0.2), rgba(240, 100, 0, 0.2));
+    border: 2px solid var(--neon-red);
+    color: white;
+    padding: 12px 30px;
+    border-radius: 25px;
+    cursor: pointer;
+    font-size: 18px;
+    font-weight: bold;
+    transition: all 0.3s ease;
+    text-shadow: 0 0 10px var(--neon-red);
+}
+
+.restart-btn:hover {
+    box-shadow: 0 0 30px var(--neon-red);
+    transform: scale(1.05);
+}
+
+/* 操作說明 */
+.controls-info {
+    display: flex;
+    justify-content: center;
+    gap: 20px;
+    margin-top: 20px;
+    flex-wrap: wrap;
+}
+
+.control-item {
+    color: #888;
+    font-size: 13px;
+    padding: 8px 15px;
+    background: rgba(20, 20, 40, 0.8);
+    border: 1px solid rgba(100, 100, 255, 0.2);
+    border-radius: 20px;
+    transition: all 0.3s ease;
+}
+
+.control-item:hover {
+    color: var(--text-glow);
+    border-color: var(--neon-cyan);
+    box-shadow: 0 0 15px rgba(0, 240, 240, 0.3);
+}
+
+.key {
+    display: inline-block;
+    background: rgba(0, 240, 240, 0.1);
+    border: 1px solid var(--neon-cyan);
+    color: var(--neon-cyan);
+    padding: 2px 8px;
+    border-radius: 5px;
+    font-weight: bold;
+    margin-right: 5px;
+    text-shadow: 0 0 5px var(--neon-cyan);
+}
+
+/* 響應式設計 */
+@media (max-width: 768px) {
+    .game-wrapper {
+        flex-direction: column;
+        align-items: center;
+        gap: 20px;
+    }
+    
+    .left-panel, .right-panel {
+        flex-direction: row;
+        flex-wrap: wrap;
+        justify-content: center;
+        gap: 10px;
+    }
+    
+    .panel-card {
+        padding: 10px;
+    }
+    
+    canvas#board {
+        width: 250px;
+        height: 500px;
+    }
+}
