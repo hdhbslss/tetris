@@ -5,105 +5,162 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <meta name="theme-color" content="#0a0a0a">
-    <title>俄羅斯方塊 - NEON</title>
+    <meta name="theme-color" content="#0a0a2e">
+    <title>俄羅斯方塊</title>
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
-    <!-- 背景粒子 -->
-    <div class="particles-container" id="particlesContainer"></div>
-    
-    <div class="app">
-        <!-- 遊戲主區域 -->
+    <!-- 背景層 -->
+    <div class="bg-layer">
+        <div class="bg-grid"></div>
+        <div class="bg-stars" id="bgStars"></div>
+        <div class="bg-float-blocks" id="bgFloatBlocks"></div>
+    </div>
+
+    <!-- 遊戲主體 -->
+    <div class="game-container">
+        <!-- 左上角按鈕區 -->
+        <div class="top-left-btns">
+            <button class="icon-btn" id="helpBtn" title="遊戲說明">
+                <svg viewBox="0 0 24 24" width="22" height="22"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 17h-2v-2h2v2zm2.07-7.75l-.9.92C13.45 12.9 13 13.5 13 15h-2v-.5c0-1.1.45-2.1 1.17-2.83l1.24-1.26c.37-.36.59-.86.59-1.41 0-1.1-.9-2-2-2s-2 .9-2 2H8c0-2.21 1.79-4 4-4s4 1.79 4 4c0 .88-.36 1.68-.93 2.25z" fill="currentColor"/></svg>
+            </button>
+            <button class="icon-btn" id="soundBtn" title="音效">
+                <svg viewBox="0 0 24 24" width="22" height="22" id="soundIcon"><path d="M3 9v6h4l5 5V4L7 9H3zm13.5 3c0-1.77-1.02-3.29-2.5-4.03v8.05c1.48-.73 2.5-2.25 2.5-4.02zM14 3.23v2.06c2.89.86 5 3.54 5 6.71s-2.11 5.85-5 6.71v2.06c4.01-.91 7-4.49 7-8.77s-2.99-7.86-7-8.77z" fill="currentColor"/></svg>
+            </button>
+        </div>
+
+        <!-- 遊戲佈局 -->
         <div class="game-layout">
-            <!-- 畫布區域 -->
+            <!-- 畫布區 -->
             <div class="canvas-wrapper">
                 <canvas id="board"></canvas>
                 
-                <!-- 覆蓋層 -->
-                <div class="overlay game-over-overlay" id="gameOverOverlay">
-                    <div class="overlay-content">
-                        <div class="overlay-title">遊戲結束</div>
-                        <div class="overlay-score" id="finalScore">0</div>
-                        <button class="overlay-btn" onclick="game.restart()">重新開始</button>
-                    </div>
+                <!-- 遊戲結束 -->
+                <div class="canvas-overlay" id="gameOverOverlay">
+                    <div class="overlay-title">遊戲結束</div>
+                    <div class="overlay-score" id="finalScore">0</div>
+                    <button class="overlay-btn" id="restartBtn">↻ 重新開始</button>
                 </div>
                 
-                <div class="overlay pause-overlay" id="pauseOverlay">
-                    <div class="overlay-content">
-                        <div class="overlay-title">暫停中</div>
-                        <div class="overlay-hint">點擊繼續</div>
-                    </div>
+                <!-- 暫停 -->
+                <div class="canvas-overlay" id="pauseOverlay">
+                    <div class="overlay-title">暫停中</div>
+                    <div class="overlay-hint">點擊畫面繼續</div>
                 </div>
             </div>
             
-            <!-- 側邊欄 -->
-            <div class="sidebar">
-                <!-- 分數卡片 -->
-                <div class="stat-card">
-                    <div class="stat-label">分數</div>
-                    <div class="stat-value" id="score">0</div>
+            <!-- 側邊資訊 -->
+            <div class="side-info">
+                <div class="info-box">
+                    <div class="info-label">分數</div>
+                    <div class="info-value" id="score">0</div>
                 </div>
-                
-                <div class="stat-card">
-                    <div class="stat-label">最高分</div>
-                    <div class="stat-value" id="highScore">0</div>
+                <div class="info-box">
+                    <div class="info-label">最高分</div>
+                    <div class="info-value" id="highScore">0</div>
                 </div>
-                
-                <div class="stat-card">
-                    <div class="stat-label">等級</div>
-                    <div class="stat-value" id="level">1</div>
+                <div class="info-box">
+                    <div class="info-label">等級</div>
+                    <div class="info-value" id="level">1</div>
                 </div>
-                
-                <div class="stat-card">
-                    <div class="stat-label">行數</div>
-                    <div class="stat-value" id="lines">0</div>
+                <div class="info-box">
+                    <div class="info-label">行數</div>
+                    <div class="info-value" id="lines">0</div>
                 </div>
-                
-                <!-- 連擊提示 -->
                 <div class="combo-text" id="comboText"></div>
-                
-                <!-- 下一個方塊 -->
                 <div class="next-box">
-                    <div class="next-label">下一個</div>
+                    <div class="info-label">下一個</div>
                     <canvas id="next"></canvas>
                 </div>
             </div>
         </div>
         
-        <!-- 手機觸控按鈕 -->
-        <div class="touch-controls" id="touchControls">
-            <div class="touch-row top-row">
-                <button class="touch-btn" id="btnUp">
-                    <svg viewBox="0 0 24 24" width="28" height="28"><path d="M12 4l-8 8h6v8h4v-8h6z" fill="currentColor"/></svg>
-                </button>
+        <!-- 觸控按鈕 -->
+        <div class="touch-pad" id="touchPad">
+            <div class="touch-row">
+                <button class="tbtn" id="btnLeft">◀</button>
+                <button class="tbtn tbtn-rotate" id="btnRotate">↻</button>
+                <button class="tbtn" id="btnRight">▶</button>
             </div>
-            <div class="touch-row middle-row">
-                <button class="touch-btn" id="btnLeft">
-                    <svg viewBox="0 0 24 24" width="28" height="28"><path d="M4 12l8-8v6h8v4h-8v6z" fill="currentColor"/></svg>
-                </button>
-                <button class="touch-btn drop-btn" id="btnDrop">
-                    <svg viewBox="0 0 24 24" width="28" height="28"><path d="M12 20l-8-8h6V4h4v8h6z" fill="currentColor"/></svg>
-                </button>
-                <button class="touch-btn" id="btnRight">
-                    <svg viewBox="0 0 24 24" width="28" height="28"><path d="M20 12l-8 8v-6H4v-4h8V4z" fill="currentColor"/></svg>
-                </button>
+            <div class="touch-row">
+                <button class="tbtn tbtn-drop" id="btnDrop">▼▼ 落下</button>
             </div>
         </div>
         
         <!-- 選單按鈕 -->
-        <div class="action-buttons">
-            <button class="action-btn primary" id="startBtn">開始遊戲</button>
-            <button class="action-btn" id="pauseBtn">暫停</button>
+        <div class="menu-btns">
+            <button class="mbtn mbtn-start" id="startBtn">🎮 開始</button>
+            <button class="mbtn" id="pauseBtn">⏯ 暫停</button>
         </div>
         
-        <!-- 鍵盤提示 (僅桌面版顯示) -->
-        <div class="keyboard-hints">
-            <span class="hint"><kbd>← →</kbd> 移動</span>
-            <span class="hint"><kbd>↑</kbd> 旋轉</span>
-            <span class="hint"><kbd>↓</kbd> 加速</span>
-            <span class="hint"><kbd>Space</kbd> 落下</span>
-            <span class="hint"><kbd>P</kbd> 暫停</span>
+        <!-- 鍵盤提示 -->
+        <div class="key-hints">
+            <span><kbd>← →</kbd> 移動</span>
+            <span><kbd>↑</kbd> 旋轉</span>
+            <span><kbd>↓</kbd> 加速</span>
+            <span><kbd>Space</kbd> 落下</span>
+            <span><kbd>P</kbd> 暫停</span>
+        </div>
+    </div>
+
+    <!-- 遊戲說明彈窗 -->
+    <div class="modal-overlay" id="helpModal">
+        <div class="modal-box">
+            <div class="modal-header">
+                <h2>🎮 遊戲說明</h2>
+                <button class="modal-close" id="closeHelp">✕</button>
+            </div>
+            <div class="modal-body">
+                <div class="help-section">
+                    <h3>📋 遊戲規則</h3>
+                    <p>移動和旋轉掉落的方塊，填滿水平行列即可消除得分。方塊堆疊到頂部時遊戲結束。</p>
+                </div>
+                
+                <div class="help-section">
+                    <h3>💻 電腦操作</h3>
+                    <div class="control-list">
+                        <div class="control-item"><kbd>←</kbd> <kbd>→</kbd> 左右移動</div>
+                        <div class="control-item"><kbd>↑</kbd> 旋轉方塊</div>
+                        <div class="control-item"><kbd>↓</kbd> 加速下落</div>
+                        <div class="control-item"><kbd>Space</kbd> 直接落下</div>
+                        <div class="control-item"><kbd>P</kbd> 暫停 / 繼續</div>
+                    </div>
+                </div>
+                
+                <div class="help-section">
+                    <h3>📱 手機操作</h3>
+                    <div class="control-list">
+                        <div class="control-item">👆 點擊畫面 旋轉方塊</div>
+                        <div class="control-item">👈 左滑 向左移動</div>
+                        <div class="control-item">👉 右滑 向右移動</div>
+                        <div class="control-item">👇 下滑 直接落下</div>
+                        <div class="control-item">🕹️ 使用下方按鈕操控</div>
+                    </div>
+                </div>
+                
+                <div class="help-section">
+                    <h3>⭐ 計分規則</h3>
+                    <div class="control-list">
+                        <div class="control-item">消除 1 行：100 分 × 等級</div>
+                        <div class="control-item">連續消除：額外加分</div>
+                        <div class="control-item">硬降加分：每格 2 分</div>
+                        <div class="control-item">每消除 10 行升級</div>
+                    </div>
+                </div>
+                
+                <div class="help-section">
+                    <h3>🎨 方塊類型</h3>
+                    <div class="piece-list">
+                        <div class="piece-item"><span style="color:#00ffff">■</span> I 型</div>
+                        <div class="piece-item"><span style="color:#ffff00">■</span> O 型</div>
+                        <div class="piece-item"><span style="color:#cc00ff">■</span> T 型</div>
+                        <div class="piece-item"><span style="color:#00ff00">■</span> S 型</div>
+                        <div class="piece-item"><span style="color:#ff0000">■</span> Z 型</div>
+                        <div class="piece-item"><span style="color:#0066ff">■</span> J 型</div>
+                        <div class="piece-item"><span style="color:#ff8800">■</span> L 型</div>
+                    </div>
+                </div>
+            </div>
         </div>
     </div>
 
