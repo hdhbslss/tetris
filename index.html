@@ -10,43 +10,69 @@
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
+    <!-- 背景層 -->
     <div class="bg-layer">
         <div class="bg-grid"></div>
         <div class="bg-stars" id="bgStars"></div>
         <div class="bg-float-blocks" id="bgFloatBlocks"></div>
     </div>
 
+    <!-- 遊戲主體 -->
     <div class="game-container">
+        <!-- 左上角按鈕 -->
         <div class="top-left-btns">
             <button class="icon-btn" id="helpBtn" title="遊戲說明">
                 <svg viewBox="0 0 24 24" width="20" height="20"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 17h-2v-2h2v2zm2.07-7.75l-.9.92C13.45 12.9 13 13.5 13 15h-2v-.5c0-1.1.45-2.1 1.17-2.83l1.24-1.26c.37-.36.59-.86.59-1.41 0-1.1-.9-2-2-2s-2 .9-2 2H8c0-2.21 1.79-4 4-4s4 1.79 4 4c0 .88-.36 1.68-.93 2.25z" fill="currentColor"/></svg>
             </button>
         </div>
 
+        <!-- 遊戲佈局 -->
         <div class="game-layout">
+            <!-- 畫布區 -->
             <div class="canvas-wrapper">
                 <canvas id="board"></canvas>
+                
+                <!-- 遊戲結束覆蓋層 -->
                 <div class="canvas-overlay game-over-overlay" id="gameOverOverlay">
                     <div class="overlay-title">遊戲結束</div>
                     <div class="overlay-score" id="finalScore">0</div>
                     <button class="overlay-btn" id="restartBtn">↻ 重新開始</button>
                 </div>
+                
+                <!-- 暫停覆蓋層 -->
                 <div class="canvas-overlay pause-overlay" id="pauseOverlay">
                     <div class="overlay-title">暫停中</div>
                     <div class="overlay-hint">點擊畫面繼續</div>
                 </div>
             </div>
             
+            <!-- 側邊資訊面板 -->
             <div class="side-info">
-                <div class="info-box"><div class="info-label">分數</div><div class="info-value" id="score">0</div></div>
-                <div class="info-box"><div class="info-label">最高分</div><div class="info-value" id="highScore">0</div></div>
-                <div class="info-box"><div class="info-label">等級</div><div class="info-value" id="level">1</div></div>
-                <div class="info-box"><div class="info-label">行數</div><div class="info-value" id="lines">0</div></div>
+                <div class="info-box">
+                    <div class="info-label">分數</div>
+                    <div class="info-value" id="score">0</div>
+                </div>
+                <div class="info-box">
+                    <div class="info-label">最高分</div>
+                    <div class="info-value" id="highScore">0</div>
+                </div>
+                <div class="info-box">
+                    <div class="info-label">等級</div>
+                    <div class="info-value" id="level">1</div>
+                </div>
+                <div class="info-box">
+                    <div class="info-label">行數</div>
+                    <div class="info-value" id="lines">0</div>
+                </div>
                 <div class="combo-text" id="comboText"></div>
-                <div class="next-box"><div class="info-label">下一個</div><canvas id="next"></canvas></div>
+                <div class="next-box">
+                    <div class="info-label">下一個</div>
+                    <canvas id="next"></canvas>
+                </div>
             </div>
         </div>
         
+        <!-- 觸控按鈕 (手機/平板顯示) -->
         <div class="touch-pad" id="touchPad">
             <div class="touch-row">
                 <button class="tbtn" id="btnLeft">◀</button>
@@ -58,11 +84,13 @@
             </div>
         </div>
         
+        <!-- 選單按鈕 (手機/平板顯示) -->
         <div class="menu-btns">
             <button class="mbtn mbtn-start" id="startBtn">🎮 開始</button>
             <button class="mbtn" id="pauseBtn">⏯ 暫停</button>
         </div>
         
+        <!-- 鍵盤提示 (桌面顯示) -->
         <div class="key-hints">
             <span><kbd>← →</kbd> 移動</span>
             <span><kbd>↑</kbd> 旋轉</span>
@@ -72,6 +100,7 @@
         </div>
     </div>
 
+    <!-- 遊戲說明彈窗 -->
     <div class="modal-overlay" id="helpModal">
         <div class="modal-box">
             <div class="modal-header">
@@ -83,6 +112,7 @@
                     <h3>📋 遊戲規則</h3>
                     <p>移動和旋轉掉落的方塊，填滿水平行列即可消除得分。方塊堆疊到頂部時遊戲結束。</p>
                 </div>
+                
                 <div class="help-section">
                     <h3>💻 電腦操作</h3>
                     <div class="control-list">
@@ -93,16 +123,18 @@
                         <div class="control-item"><kbd>P</kbd> 暫停 / 繼續</div>
                     </div>
                 </div>
+                
                 <div class="help-section">
-                    <h3>📱 手機操作</h3>
+                    <h3>📱 手機/平板操作</h3>
                     <div class="control-list">
-                        <div class="control-item">👆 點擊畫面 旋轉方塊</div>
-                        <div class="control-item">👈 左滑 向左移動</div>
-                        <div class="control-item">👉 右滑 向右移動</div>
-                        <div class="control-item">👇 下滑 直接落下</div>
+                        <div class="control-item">👆 點擊畫面 → 旋轉方塊</div>
+                        <div class="control-item">👈 左滑 → 向左移動</div>
+                        <div class="control-item">👉 右滑 → 向右移動</div>
+                        <div class="control-item">👇 下滑 → 直接落下</div>
                         <div class="control-item">🕹️ 使用下方按鈕操控</div>
                     </div>
                 </div>
+                
                 <div class="help-section">
                     <h3>⭐ 計分規則</h3>
                     <div class="control-list">
@@ -112,6 +144,7 @@
                         <div class="control-item">每消除 10 行升級</div>
                     </div>
                 </div>
+                
                 <div class="help-section">
                     <h3>🎨 方塊類型</h3>
                     <div class="piece-list">
