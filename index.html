@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>俄羅斯方塊 - NEON 版</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="background-particles" id="particles"></div>
+    
+    <div class="main-container">
+        <div class="game-wrapper">
+            <!-- 左側面板 -->
+            <div class="left-panel">
+                <div class="panel-card">
+                    <div class="panel-title">最高分</div>
+                    <div class="panel-value" id="highScore">0</div>
+                </div>
+                <div class="panel-card">
+                    <div class="panel-title">等級</div>
+                    <div class="panel-value level-display" id="levelDisplay">1</div>
+                </div>
+                <div class="combo-display" id="comboDisplay"></div>
+            </div>
+            
+            <!-- 遊戲主區域 -->
+            <div class="game-center">
+                <div class="game-board-container">
+                    <canvas id="board"></canvas>
+                    <div class="game-over-overlay" id="gameOverOverlay">
+                        <div class="game-over-text">遊戲結束</div>
+                        <div class="final-score" id="finalScore">0</div>
+                        <button class="restart-btn" onclick="game.start()">重新開始</button>
+                    </div>
+                    <div class="pause-overlay" id="pauseOverlay">
+                        <div class="pause-text">暫停中</div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- 右側面板 -->
+            <div class="right-panel">
+                <div class="panel-card">
+                    <div class="panel-title">分數</div>
+                    <div class="panel-value" id="score">0</div>
+                </div>
+                <div class="panel-card">
+                    <div class="panel-title">消除行數</div>
+                    <div class="panel-value" id="lines">0</div>
+                </div>
+                <div class="next-piece-panel">
+                    <div class="panel-title">下一個</div>
+                    <canvas id="next"></canvas>
+                </div>
+                <div class="control-buttons">
+                    <button class="game-btn start-btn" onclick="game.start()">
+                        <span>🎮</span> 開始
+                    </button>
+                    <button class="game-btn pause-btn" onclick="game.togglePause()">
+                        <span>⏯️</span> 暫停
+                    </button>
+                </div>
+            </div>
+        </div>
+        
+        <!-- 操作說明 -->
+        <div class="controls-info">
+            <div class="control-item">
+                <span class="key">← →</span> 移動
+            </div>
+            <div class="control-item">
+                <span class="key">↑</span> 旋轉
+            </div>
+            <div class="control-item">
+                <span class="key">↓</span> 加速
+            </div>
+            <div class="control-item">
+                <span class="key">空白鍵</span> 直接落下
+            </div>
+            <div class="control-item">
+                <span class="key">P</span> 暫停
+            </div>
+        </div>
+    </div>
+
+    <script src="game.js"></script>
+</body>
+</html>
