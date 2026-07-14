@@ -1,4 +1,4 @@
-// === 俄羅斯方塊 - 完整版 ===
+// === 俄羅斯方塊 - 完整修復版 ===
 class Tetris {
     constructor() {
         this.boardCanvas = document.getElementById('board');
@@ -79,10 +79,8 @@ class Tetris {
     }
 
     bindEvents() {
-        // 鍵盤
         document.addEventListener('keydown', (e) => this.onKey(e));
 
-        // 觸控按鈕
         const btnActions = {
             btnLeft: 'left',
             btnRight: 'right',
@@ -111,23 +109,20 @@ class Tetris {
             btn.addEventListener('pointercancel', () => this.clearTouchTimer(action));
         });
 
-        // 全域 pointerup 防止卡鍵
         document.addEventListener('pointerup', () => {
             Object.keys(this.touchTimers).forEach(a => this.clearTouchTimer(a));
         });
 
-        // 按鈕事件
         document.getElementById('startBtn').addEventListener('click', () => this.start());
         document.getElementById('desktopStartBtn').addEventListener('click', () => this.start());
         document.getElementById('pauseBtn').addEventListener('click', () => this.togglePause());
         document.getElementById('restartBtn').addEventListener('click', () => this.start());
 
-        // 暫停覆蓋層點擊
-        document.getElementById('pauseOverlay').addEventListener('click', () => {
+        document.getElementById('pauseOverlay').addEventListener('click', (e) => {
+            e.stopPropagation();
             if (this.isPaused) this.togglePause();
         });
 
-        // 遊戲說明彈窗
         document.getElementById('helpBtn').addEventListener('click', () => {
             document.getElementById('helpModal').classList.add('active');
         });
@@ -140,10 +135,8 @@ class Tetris {
             }
         });
 
-        // iOS 防止橡皮筋
         this.boardCanvas.addEventListener('touchmove', (e) => e.preventDefault(), { passive: false });
 
-        // 畫布手勢
         let sx = 0, sy = 0, st = 0;
         this.boardCanvas.addEventListener('touchstart', (e) => {
             if (e.touches.length === 1) {
@@ -205,6 +198,7 @@ class Tetris {
     }
 
     start() {
+        this.isRunning = false;
         if (this.loopId) { clearInterval(this.loopId); this.loopId = null; }
         Object.keys(this.touchTimers).forEach(k => this.clearTouchTimer(k));
         this.resetBoard();
@@ -227,13 +221,13 @@ class Tetris {
     }
 
     stop() {
-        this.isRunning = false;
         if (this.loopId) { clearInterval(this.loopId); this.loopId = null; }
         Object.keys(this.touchTimers).forEach(k => this.clearTouchTimer(k));
     }
 
     gameOver() {
         this.isGameOver = true;
+        this.isRunning = false;
         this.stop();
         if (this.score > this.highScore) {
             this.highScore = this.score;
@@ -256,19 +250,22 @@ class Tetris {
     }
 
     togglePause() {
-        if (!this.isRunning || this.isGameOver) return;
+        if (this.isGameOver) return;
+        if (!this.isRunning && !this.isPaused) return;
+
         this.isPaused = !this.isPaused;
+
         if (this.isPaused) {
             document.getElementById('pauseOverlay').classList.add('active');
             this.stop();
         } else {
             document.getElementById('pauseOverlay').classList.remove('active');
-            this.isRunning = true;
             this.runLoop();
         }
     }
 
     runLoop() {
+        if (this.loopId) { clearInterval(this.loopId); this.loopId = null; }
         const speed = Math.max(80, 800 - (this.level - 1) * 70);
         this.loopId = setInterval(() => this.tick(), speed);
     }
@@ -391,6 +388,7 @@ class Tetris {
         }
     }
 
+    // ✅ 修復：消除時不 spawnPiece
     checkLines() {
         const full = [];
         for (let y = 0; y < this.ROWS; y++) {
@@ -403,9 +401,13 @@ class Tetris {
             this.combo++;
             this.score += full.length * 100 * this.level + this.combo * 50;
             if (this.combo > 1) this.showCombo(this.combo);
+            this.stop();
         } else {
             this.combo = 0;
             this.spawnPiece();
+            if (this.isRunning && !this.isPaused && !this.isGameOver) {
+                this.runLoop();
+            }
         }
         this.updateDisplay();
     }
@@ -417,6 +419,7 @@ class Tetris {
         setTimeout(() => el.classList.remove('show'), 1000);
     }
 
+    // ✅ 修復：只在動畫完成後 spawnPiece 一次
     clearAnimation() {
         if (!this.isClearing || this.clearing.length === 0) return;
         this.clearFrame++;
@@ -429,12 +432,13 @@ class Tetris {
             }
             this.lines += this.clearing.length;
             this.level = Math.floor(this.lines / 10) + 1;
-            this.stop();
-            if (this.isRunning && !this.isPaused) this.runLoop();
             this.clearing = [];
             this.isClearing = false;
             this.spawnPiece();
             this.updateDisplay();
+            if (this.isRunning && !this.isPaused && !this.isGameOver) {
+                this.runLoop();
+            }
         }
         this.draw();
     }
@@ -481,7 +485,6 @@ class Tetris {
     draw() {
         this.ctx.clearRect(0, 0, this.boardCanvas.width, this.boardCanvas.height);
 
-        // 網格
         this.ctx.strokeStyle = 'rgba(255, 255, 255, 0.03)';
         this.ctx.lineWidth = 1;
         for (let x = 0; x <= this.COLS; x++) {
@@ -497,7 +500,6 @@ class Tetris {
             this.ctx.stroke();
         }
 
-        // 已固定方塊
         for (let y = 0; y < this.ROWS; y++) {
             for (let x = 0; x < this.COLS; x++) {
                 if (this.board[y][x]) {
@@ -512,7 +514,6 @@ class Tetris {
             }
         }
 
-        // 當前方塊
         if (this.piece && !this.isGameOver) {
             const ci = this.pieceColorIndex();
             const c = this.COLORS[ci];
@@ -525,7 +526,6 @@ class Tetris {
             }
         }
 
-        // 粒子
         this.drawParticles();
     }
 
@@ -664,5 +664,4 @@ class Tetris {
     }
 }
 
-// 啟動遊戲
 const game = new Tetris();
